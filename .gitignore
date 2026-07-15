@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# uv
+.uv/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# 스캐폴딩으로 생성되는 프로젝트 폴더 (예시)
+/my-project/
+/my-site/
+
+# OS / 에디터
+.DS_Store
+Thumbs.db

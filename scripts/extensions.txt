@@ -1,0 +1,11 @@
+# --- Python 필수 ---
+ms-python.python
+ms-python.vscode-pylance
+charliermarsh.ruff
+# --- AI ---
+anthropic.claude-code
+# --- 웹(HTML/CSS/JS) ---
+esbenp.prettier-vscode
+dbaeumer.vscode-eslint
+# --- 편의 ---
+usernamehw.errorlens

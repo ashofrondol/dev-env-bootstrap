@@ -1,0 +1,26 @@
+{
+  // ===== 저장 시 자동 포맷 =====
+  "editor.formatOnSave": true,
+
+  // ===== 파이썬: Ruff가 포매터+린터 담당 =====
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit", // 임포트 자동 정렬 (isort 대체)
+      "source.fixAll": "explicit" // 자동 수정 가능한 lint 오류 수정
+    }
+  },
+  // Ruff가 린팅하므로 Pylance 중복 린팅 방지, 타입체크만 유지
+  "python.analysis.typeCheckingMode": "basic",
+
+  // ===== 웹: Prettier가 포매터 담당 =====
+  "[javascript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[html]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[css]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+
+  // JS는 저장 시 ESLint 자동 수정 (JS/TS 파일에만 적용됨)
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  }
+}

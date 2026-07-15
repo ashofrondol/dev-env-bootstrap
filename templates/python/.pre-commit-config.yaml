@@ -1,0 +1,13 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.21 # astral-sh/ruff-pre-commit 공식 README 현재 예시값
+    hooks:
+      - id: ruff-check # 린터 (먼저)
+        args: [--fix]
+      - id: ruff-format # 포매터 (나중)

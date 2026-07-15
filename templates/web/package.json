@@ -1,0 +1,17 @@
+{
+  "name": "my-web-project",
+  "version": "0.1.0",
+  "description": "HTML/CSS/JS 프로젝트 (Vitest + Prettier + ESLint)",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write .",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "eslint": "^9",
+    "prettier": "^3",
+    "vitest": "^3"
+  }
+}

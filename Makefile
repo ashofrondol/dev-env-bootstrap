@@ -3,7 +3,7 @@
 # 사용법:
 #   make setup              # 전역 도구 설치 (uv, VS Code 익스텐션 등)
 #   make project            # 새 프로젝트 스캐폴딩 (기본 언어 = python)
-#   make project LANG=web   # HTML/CSS/JS 프로젝트
+#   make project PROJ_LANG=web   # HTML/CSS/JS 프로젝트
 #   make test               # TestCase.txt + 스모크 테스트 실행
 #   make help               # 사용 가능한 타겟 목록
 # ============================================================
@@ -15,8 +15,9 @@ include $(CONFIG)
 endif
 
 # 기본값 (dev.config에서 재정의 가능)
+# 주의: 언어 변수는 Unix 로케일 환경변수 LANG 과 충돌하지 않도록 PROJ_LANG 사용
 DEFAULT_PYTHON_VERSION ?= 3.13
-LANG ?= python
+PROJ_LANG ?= python
 PROJECT_NAME ?= my-project
 
 # ---------- OS 감지 ----------
@@ -47,8 +48,8 @@ help:
 	@echo ""
 	@echo "사용 가능한 명령:"
 	@echo "  make setup            - 전역 개발도구 설치 (uv, VS Code 익스텐션)"
-	@echo "  make project          - 새 프로젝트 생성 (LANG=python 기본)"
-	@echo "  make project LANG=web - 웹(HTML/CSS/JS) 프로젝트 생성"
+	@echo "  make project               - 새 프로젝트 생성 (PROJ_LANG=python 기본)"
+	@echo "  make project PROJ_LANG=web - 웹(HTML/CSS/JS) 프로젝트 생성"
 	@echo "  make test             - TestCase.txt 및 스모크 테스트 실행"
 
 os-info:
@@ -71,8 +72,8 @@ setup: bootstrap-check
 # ---------- 프로젝트 스캐폴딩 ----------
 # 파이썬 버전을 인터랙티브로 묻고, 미입력 시 config 기본값 사용
 project: bootstrap-check
-	@bash scripts/scaffold_project.sh "$(LANG)" "$(PROJECT_NAME)" "$(DEFAULT_PYTHON_VERSION)"
+	@bash scripts/scaffold_project.sh "$(PROJ_LANG)" "$(PROJECT_NAME)" "$(DEFAULT_PYTHON_VERSION)"
 
 # ---------- 테스트 실행 ----------
 test: bootstrap-check
-	@bash scripts/run_tests.sh "$(LANG)"
+	@bash scripts/run_tests.sh "$(PROJ_LANG)"

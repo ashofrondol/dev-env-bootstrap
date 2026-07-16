@@ -5,7 +5,7 @@
 
 - `make setup` — 전역 개발 도구 설치 (uv, Ruff, pre-commit, VS Code 익스텐션)
 - `make project` — 새 프로젝트 스캐폴딩 (파이썬 버전을 인터랙티브로 질문)
-- `make project LANG=web` — HTML/CSS/JS 프로젝트 스캐폴딩
+- `make project PROJ_LANG=web` — HTML/CSS/JS 프로젝트 스캐폴딩
 - `make test` — `TestCase.txt` 파라미터화 테스트 + 스모크 테스트 실행
 - `make help` / `make os-info` — 도움말 / 감지된 OS 출력
 
@@ -70,7 +70,7 @@ dev-env-bootstrap/
 
 ```makefile
 DEFAULT_PYTHON_VERSION = 3.13   # 파이썬 기본 버전
-LANG = python                   # 기본 언어 (python | web)
+PROJ_LANG = python              # 기본 언어 (python | web) — 로케일 LANG 과 구분
 TEST_FRAMEWORK = pytest         # 테스트 프레임워크
 PROJECT_NAME = my-project       # 기본 프로젝트 이름
 ```
@@ -78,7 +78,7 @@ PROJECT_NAME = my-project       # 기본 프로젝트 이름
 커맨드라인 덮어쓰기 예시:
 
 ```bash
-make project LANG=web PROJECT_NAME=my-site
+make project PROJ_LANG=web PROJECT_NAME=my-site
 make setup DEFAULT_PYTHON_VERSION=3.12
 ```
 

@@ -1,4 +1,4 @@
-# ============================================================
+﻿# ============================================================
 # bootstrap.ps1 - Windows WSL2 자동 설치 + make 실행 부트스트랩
 # 실행: PowerShell(관리자) 에서
 #   powershell -ExecutionPolicy Bypass -File bootstrap.ps1
@@ -33,8 +33,11 @@ function Register-Resume {
 # ---------- 메인 로직 ----------
 if (Test-Wsl2Ready) {
     Write-Host "[OK] WSL2가 이미 설치되어 있습니다. make setup 실행..."
-    # 프로젝트 폴더를 /mnt/c 경로로 변환하여 WSL 내부에서 실행
-    $wslPath = ($ProjectDir -replace '\\','/' -replace '^C:','/mnt/c')
+    # 프로젝트 폴더를 /mnt/<드라이브> 경로로 변환하여 WSL 내부에서 실행
+    # (C: 전용 하드코딩 대신 임의 드라이브 문자·대소문자 지원)
+    $drive   = $ProjectDir.Substring(0,1).ToLower()
+    $rest    = ($ProjectDir.Substring(2) -replace '\\','/')
+    $wslPath = "/mnt/$drive$rest"
     wsl -- bash -lic "cd '$wslPath' && make setup"
 }
 else {

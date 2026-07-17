@@ -15,17 +15,24 @@ cp "$TPL/vscode/settings.json"   "$PROJECT_NAME/.vscode/"
 cp "$TPL/vscode/extensions.json" "$PROJECT_NAME/.vscode/"
 
 if [[ "$LANG_TYPE" == "python" ]]; then
-  # 파이썬 버전 인터랙티브 입력 (미입력 시 기본값)
-  read -rp "사용할 파이썬 버전 [$DEFAULT_PY]: " PY_VER
+  # 파이썬 버전 인터랙티브 입력 (미입력·비대화형 환경 시 기본값)
+  # 비대화형(CI/파이프)에서는 read가 실패해 set -e로 즉시 종료되므로 TTY를 확인한다
+  if [[ -t 0 ]]; then
+    read -rp "사용할 파이썬 버전 [$DEFAULT_PY]: " PY_VER
+  else
+    PY_VER=""
+    echo "    (비대화형 환경 감지 -> 기본값 사용)"
+  fi
   PY_VER="${PY_VER:-$DEFAULT_PY}"
   echo "    -> 파이썬 $PY_VER 사용"
 
   cd "$PROJECT_NAME"
   uv init --python "$PY_VER"
   uv python pin "$PY_VER"          # .python-version 고정
-  uv add --dev pytest              # 테스트 프레임워크 설치
+  uv add --dev pytest psutil       # 테스트 프레임워크 + 자원 측정
   mkdir -p tests
   cp "$TPL/python/smoke_test.py" . 2>/dev/null || true
+  cp "$TPL/python/perf.py" . 2>/dev/null || true
   cp "$TPL/python/tests/test_from_testcases.py" tests/ 2>/dev/null || true
   touch TestCase.txt               # 빈 테스트케이스 파일 생성
   cp "$TPL/python/.pre-commit-config.yaml" . 2>/dev/null || true

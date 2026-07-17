@@ -41,7 +41,7 @@ endif
 
 SHELL := /bin/bash
 
-.PHONY: help setup project test os-info bootstrap-check
+.PHONY: help setup project test report os-info bootstrap-check
 
 help:
 	@echo "감지된 OS: $(DETECTED_OS)"
@@ -51,6 +51,7 @@ help:
 	@echo "  make project               - 새 프로젝트 생성 (PROJ_LANG=python 기본)"
 	@echo "  make project PROJ_LANG=web - 웹(HTML/CSS/JS) 프로젝트 생성"
 	@echo "  make test             - TestCase.txt 및 스모크 테스트 실행"
+	@echo "  make report           - 실행 프로파일 보고서 생성 (reports/*.md)"
 
 os-info:
 	@echo "OS = $(DETECTED_OS), 기본 파이썬 = $(DEFAULT_PYTHON_VERSION)"
@@ -75,5 +76,11 @@ project: bootstrap-check
 	@bash scripts/scaffold_project.sh "$(PROJ_LANG)" "$(PROJECT_NAME)" "$(DEFAULT_PYTHON_VERSION)"
 
 # ---------- 테스트 실행 ----------
+# 저장소 루트에서 실행하면 PROJECT_NAME 디렉터리의 테스트를 돌린다
 test: bootstrap-check
-	@bash scripts/run_tests.sh "$(PROJ_LANG)"
+	@bash scripts/run_tests.sh "$(PROJ_LANG)" "$(PROJECT_NAME)"
+
+# ---------- 실행 프로파일 보고서 ----------
+# 시간/메모리/구간별 측정 결과를 reports/<날짜>.md 로 남긴다
+report: bootstrap-check
+	@bash scripts/run_report.sh "$(PROJ_LANG)" "$(PROJECT_NAME)"

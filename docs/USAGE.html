@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>dev-env-bootstrap 사용 가이드</title>
+<style>
+  :root {
+    --bg: #faf9f6; --fg: #24292f; --muted: #57606a;
+    --card: #ffffff; --border: #d8dee4; --accent: #0969da;
+    --code-bg: #f0f2f5; --ok: #1a7f37; --warn: #9a6700; --danger: #cf222e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171b; --fg: #e6edf3; --muted: #9aa4af;
+      --card: #1c2128; --border: #343b44; --accent: #539bf5;
+      --code-bg: #22272e; --ok: #57ab5a; --warn: #c69026; --danger: #e5534b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font-family: "Segoe UI", "Malgun Gothic", system-ui, sans-serif;
+    line-height: 1.65;
+  }
+  .wrap { max-width: 60rem; margin: 0 auto; padding: 2rem 1.25rem 5rem; }
+  header.hero { padding: 2.5rem 0 1rem; border-bottom: 2px solid var(--border); margin-bottom: 2rem; }
+  header.hero h1 { margin: 0 0 .4rem; font-size: 2rem; letter-spacing: -.02em; }
+  header.hero p.sub { margin: 0; color: var(--muted); font-size: 1.05rem; }
+  .badges { margin-top: .9rem; display: flex; flex-wrap: wrap; gap: .4rem; }
+  .badge {
+    font-size: .78rem; font-weight: 600; padding: .18rem .6rem;
+    border-radius: 999px; border: 1px solid var(--border); background: var(--card);
+  }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 .8rem; padding-bottom: .35rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.08rem; margin: 1.6rem 0 .5rem; }
+  p { margin: .5rem 0 .9rem; }
+  a { color: var(--accent); }
+  code {
+    font-family: Consolas, "D2Coding", "Cascadia Mono", monospace;
+    background: var(--code-bg); padding: .12rem .35rem; border-radius: 4px; font-size: .88em;
+  }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: .9rem 1rem; overflow-x: auto; font-size: .86rem; line-height: 1.55;
+  }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: .8rem 0 1.2rem; font-size: .92rem; }
+  th, td { border: 1px solid var(--border); padding: .5rem .7rem; text-align: left; vertical-align: top; }
+  th { background: var(--code-bg); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; margin: 1rem 0; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; }
+  .card h3 { margin-top: 0; }
+  .card .os { font-size: .78rem; font-weight: 700; color: var(--accent); letter-spacing: .05em; }
+  .note { border-left: 4px solid var(--accent); background: var(--card); padding: .7rem 1rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+  .note.warn { border-left-color: var(--warn); }
+  .note.danger { border-left-color: var(--danger); }
+  .note b:first-child { display: block; margin-bottom: .2rem; }
+  .flow { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: 1rem 0; }
+  .flow .step {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: .5rem .9rem; font-weight: 600; font-size: .9rem;
+  }
+  .flow .arrow { color: var(--muted); font-weight: 700; }
+  footer { margin-top: 3.5rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: .85rem; }
+  .toc { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.4rem; }
+  .toc ol { margin: .3rem 0; padding-left: 1.2rem; }
+  kbd { border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 0 .35rem; font-size: .85em; background: var(--card); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>🛠 dev-env-bootstrap 사용 가이드</h1>
+  <p class="sub">명령 세 개로 끝내는 개발환경 — 전역 도구 설치 · 프로젝트 스캐폴딩 · 테스트 자동화</p>
+  <div class="badges">
+    <span class="badge">make</span><span class="badge">uv</span><span class="badge">Ruff</span>
+    <span class="badge">pytest</span><span class="badge">WSL2 자동설치</span>
+    <span class="badge">Prettier + ESLint + Vitest</span><span class="badge">Claude Code</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <b>목차</b>
+  <ol>
+    <li><a href="#what">이게 뭔가요?</a></li>
+    <li><a href="#quickstart">빠른 시작 (OS별)</a></li>
+    <li><a href="#commands">명령어 레퍼런스</a></li>
+    <li><a href="#config">설정 바꾸기 (dev.config)</a></li>
+    <li><a href="#testing">테스트 사용법 (TestCase.txt)</a></li>
+    <li><a href="#stack">설치되는 도구와 이유</a></li>
+    <li><a href="#ai">AI(Claude Code)와 함께 쓰기</a></li>
+    <li><a href="#trouble">문제 해결</a></li>
+    <li><a href="#next">다음 단계</a></li>
+  </ol>
+</nav>
+
+<h2 id="what">1. 이게 뭔가요?</h2>
+<p>
+새 컴퓨터·새 프로젝트마다 반복하는 <b>"개발환경 세팅"을 Makefile 하나로 자동화</b>한 도구입니다.
+2026년 표준 파이썬 스택(<b>uv + Ruff + pytest</b>)과 웹 스택(<b>Prettier + ESLint + Vitest</b>)을
+설치하고, VS Code 설정(저장 시 자동 포맷·자동 lint 수정)까지 깔아줍니다.
+</p>
+<div class="flow">
+  <span class="step">① make setup<br><small>전역 도구 설치 (1회)</small></span>
+  <span class="arrow">→</span>
+  <span class="step">② make project<br><small>프로젝트 생성 (매번)</small></span>
+  <span class="arrow">→</span>
+  <span class="step">③ 코딩<br><small>저장하면 자동 정리</small></span>
+  <span class="arrow">→</span>
+  <span class="step">④ make test<br><small>테스트 실행</small></span>
+</div>
+
+<h2 id="quickstart">2. 빠른 시작 (OS별)</h2>
+<div class="cards">
+  <div class="card">
+    <span class="os">LINUX / MACOS</span>
+    <h3>터미널에서 바로</h3>
+<pre><code>cd dev-env-bootstrap
+make setup      # 최초 1회
+make project    # 새 프로젝트
+make test       # 테스트</code></pre>
+    <p>make가 기본 설치돼 있으므로 추가 준비가 필요 없습니다.</p>
+  </div>
+  <div class="card">
+    <span class="os">WINDOWS</span>
+    <h3>관리자 PowerShell에서</h3>
+<pre><code>cd dev-env-bootstrap
+powershell -ExecutionPolicy Bypass `
+  -File bootstrap.ps1</code></pre>
+    <p>WSL2가 없으면 <b>자동 설치 → 재부팅 → 로그인 시 자동 재개</b>됩니다.
+    이미 있으면 곧바로 WSL 안에서 <code>make setup</code>이 실행됩니다.
+    이후 작업은 WSL 셸(우분투 터미널)에서 <code>make project</code> 등을 사용하세요.</p>
+  </div>
+</div>
+<div class="note warn">
+  <b>⚠ Windows 주의사항</b>
+  WSL2는 BIOS/UEFI에서 가상화가 켜져 있어야 합니다 (에러 <code>0x80370102</code> = 가상화 꺼짐).
+  또한 <code>/mnt/c</code>(Windows 디스크) 경로는 느리므로, 실제 프로젝트는 WSL 홈(<code>~/</code>)에 두는 것이
+  성능상 유리합니다.
+</div>
+
+<h2 id="commands">3. 명령어 레퍼런스</h2>
+<table>
+  <tr><th>명령</th><th>하는 일</th><th>언제</th></tr>
+  <tr><td><code>make help</code></td><td>사용 가능한 명령 + 감지된 OS 출력</td><td>궁금할 때</td></tr>
+  <tr><td><code>make setup</code></td><td>uv·파이썬·Ruff·pre-commit 설치 + VS Code 익스텐션 일괄 설치</td><td>컴퓨터당 1회</td></tr>
+  <tr><td><code>make project</code></td><td>파이썬 프로젝트 생성 — 파이썬 버전을 물어보고(미입력 시 기본값), uv init·pytest·테스트 템플릿·VS Code 설정을 깔아줌</td><td>새 프로젝트마다</td></tr>
+  <tr><td><code>make project PROJ_LANG=web</code></td><td>HTML/CSS/JS 프로젝트 생성 (Vitest·Prettier·ESLint)</td><td>웹 프로젝트</td></tr>
+  <tr><td><code>make project PROJECT_NAME=foo</code></td><td>이름을 지정해서 생성</td><td>필요 시</td></tr>
+  <tr><td><code>make test</code></td><td>TestCase.txt 기반 pytest + smoke_test.py 실행</td><td>코드 수정 후</td></tr>
+  <tr><td><code>make report</code></td><td>실행 프로파일 보고서 생성 — 시간·메모리·구간별·입력별 측정을 <code>reports/&lt;날짜&gt;.md</code>로 저장</td><td>성능 확인·비교 시</td></tr>
+</table>
+<div class="note">
+  <b>ℹ 변수 이름은 PROJ_LANG</b>
+  언어 선택 변수는 Unix 로케일 환경변수 <code>LANG</code>과의 충돌을 피하기 위해
+  <code>PROJ_LANG</code>을 사용합니다. <code>make project LANG=web</code>은 동작하지 않습니다.
+</div>
+
+<h2 id="config">4. 설정 바꾸기 (dev.config)</h2>
+<p>프로젝트 루트의 <code>dev.config</code>에서 기본값을 바꿀 수 있습니다. 커맨드라인 인자가 항상 우선합니다.</p>
+<pre><code>DEFAULT_PYTHON_VERSION = 3.13   # 파이썬 기본 버전
+PROJ_LANG = python              # 기본 언어 (python | web)
+TEST_FRAMEWORK = pytest         # 테스트 프레임워크
+PROJECT_NAME = my-project       # 기본 프로젝트 이름</code></pre>
+<pre><code># 일회성 재정의 예시
+make project PROJ_LANG=web PROJECT_NAME=my-site
+make setup DEFAULT_PYTHON_VERSION=3.12</code></pre>
+
+<h2 id="testing">5. 테스트 사용법 (TestCase.txt)</h2>
+<p>
+생성된 프로젝트의 <code>TestCase.txt</code>에 <b>한 줄에 한 케이스</b>를 적으면
+pytest 파라미터화 테스트로 자동 변환됩니다. 코드를 몰라도 케이스를 추가할 수 있습니다.
+</p>
+<pre><code># 형식: 함수명 인자들 => 기대값   (#으로 시작하면 주석)
+add 2 3 => 5
+add 0.1 0.2 => 0.3                        # 실수는 근사 비교(pytest.approx)
+concat "hello world" "!" => "hello world!"
+head [10, 20, 30] => 10
+merge {"a": 1} {"b": 2} => {"a": 1, "b": 2}</code></pre>
+<ul>
+  <li><code>tests/test_from_testcases.py</code>가 파일을 읽어 케이스마다 테스트를 만듭니다.
+      실패하면 <b>어떤 입력이 실패했는지</b> pytest가 정확히 알려줍니다
+      (테스트 ID가 <code>add(2, 3) =&gt; 5</code> 형태로 표시).</li>
+  <li>프로젝트 루트에 <code>smoke_test.py</code>가 있으면 <code>make test</code>가 이어서 실행합니다.
+      "일단 돌아가긴 하는가"를 빠르게 확인하는 용도입니다.</li>
+  <li><code>make test</code>는 저장소 루트에서 실행하면 <code>PROJECT_NAME</code> 디렉터리로
+      이동해 실행하며, 테스트 실패를 종료코드로 전파합니다 (CI에서 게이트로 사용 가능).</li>
+</ul>
+<div class="note">
+  <b>ℹ 지원 자료형</b>
+  인자와 기대값은 파이썬 리터럴(<code>ast.literal_eval</code>)로 해석됩니다 —
+  정수·실수·불리언(True/False)·None·문자열(<code>"..."</code>/<code>'...'</code>)·리스트·튜플·딕셔너리.
+  리터럴이 아닌 토큰은 문자열로 취급되고(<code>upper hello =&gt; HELLO</code> 가능),
+  따옴표/괄호 안의 공백과 <code>=&gt;</code>는 구분자로 취급하지 않습니다.
+  기대값이 실수면 자동으로 근사 비교합니다.
+</div>
+
+<h3>자동 실행 보고서 (make report)</h3>
+<p>
+<code>make report</code>를 실행하면 <b>테스트 결과 + 실행 시간/메모리 + 구간별 처리 시간 +
+입력별 자원 변동</b>이 담긴 보고서가 <code>reports/&lt;날짜&gt;.md</code>로 생성되고,
+<code>reports/history.csv</code>에 한 줄 요약이 누적되어 코드 변경에 따른 성능 추세를 추적할 수 있습니다.
+</p>
+<ul>
+  <li><b>전체 실행</b>: 대상 스크립트(기본 <code>smoke_test.py</code>)의 벽시계/CPU 시간, 최대 메모리</li>
+  <li><b>특정 구문</b>: 코드에서 <code>from perf import span</code> 후
+      <code>with span("파싱"):</code> 으로 감싸면 구간별 시간·메모리 증가가 표로 표시</li>
+  <li><b>느린 함수 찾기</b>: cProfile 누적시간 상위 10 (계측 오버헤드가 있어 상대 비교용)</li>
+  <li><b>입력 변동 → 자원 변동</b>: TestCase.txt의 케이스별로 반복 실행(중앙값)해
+      입력 크기에 따른 시간/메모리 변화를 표로 제공</li>
+</ul>
+<div class="note warn">
+  <b>⚠ 측정값 해석</b>
+  수치는 환경 부하에 따라 흔들립니다. 절대값 하나보다 <code>history.csv</code>의
+  추세, 같은 보고서 안의 입력 간 상대 비교로 판단하세요. tracemalloc 기반 메모리는
+  파이썬 객체만 계산합니다(C 확장 제외).
+</div>
+
+<h2 id="stack">6. 설치되는 도구와 이유</h2>
+<table>
+  <tr><th>도구</th><th>역할</th><th>왜 이걸 쓰나</th></tr>
+  <tr><td><b>uv</b></td><td>파이썬 설치·가상환경·패키지·CLI 도구 관리</td><td>pip/venv/pyenv/pipx를 하나로 대체. pip 대비 8~10배(웜 캐시 시 80배+) 빠름. 2026년 신규 프로젝트 기본값</td></tr>
+  <tr><td><b>Ruff</b></td><td>린터 + 포매터</td><td>Flake8·Black·isort를 한 도구로 대체. 저장(<kbd>Ctrl</kbd>+<kbd>S</kbd>)할 때마다 자동으로 코드를 정리·수정 — "자동 리팩터링"의 핵심</td></tr>
+  <tr><td><b>Pylance</b></td><td>타입체크·자동완성</td><td>Ruff와 역할이 달라 둘 다 설치 (중복 린팅은 꺼둠)</td></tr>
+  <tr><td><b>pytest</b></td><td>파이썬 테스트</td><td>사실상 표준. TestCase.txt 파라미터화와 궁합 최고</td></tr>
+  <tr><td><b>pre-commit</b></td><td>커밋 직전 자동 검사</td><td>커밋할 때마다 Ruff가 검사·수정 (<code>ruff-check</code> → <code>ruff-format</code> 순서)</td></tr>
+  <tr><td><b>Prettier / ESLint / Vitest</b></td><td>웹 포맷 / 린트 / 테스트</td><td>역할 분담이 업계 표준. Vitest는 Jest보다 빠르고 신규 프로젝트 기본</td></tr>
+  <tr><td><b>Claude Code 익스텐션</b></td><td>AI 코딩 도우미</td><td>사이드바에서 인라인 diff 리뷰. 유료 구독 또는 API 키 필요</td></tr>
+</table>
+<p>VS Code 동작: <code>templates/vscode/settings.json</code>이 프로젝트에 복사되어
+<b>저장 시 자동 포맷 + import 정렬 + 고칠 수 있는 lint 경고 자동 수정</b>이 켜집니다.</p>
+
+<h2 id="ai">7. AI(Claude Code)와 함께 쓰기</h2>
+<p>
+이 저장소에는 Claude Code(주로 Opus)에게 작업을 시킬 때 주입하는 지침서
+<a href="AI-WORKFLOW.md"><code>docs/AI-WORKFLOW.md</code></a>가 포함되어 있습니다.
+프로젝트의 하드 규칙(Makefile TAB, LF 줄바꿈, PROJ_LANG, uv 전용, Ruff 훅 순서 등)과
+검증 절차, 프롬프트 요령이 정리되어 있습니다.
+</p>
+<h3>주입하는 세 가지 방법</h3>
+<ol>
+  <li><b>상시 적용(권장)</b> — <code>cp docs/AI-WORKFLOW.md CLAUDE.md</code> 로 복사.
+      Claude Code가 매 세션 자동으로 읽습니다.</li>
+  <li><b>세션 중 참조</b> — 프롬프트에 <code>@docs/AI-WORKFLOW.md</code> 를 포함.</li>
+  <li><b>스크립트/CI</b> — <code>claude -p</code> 프롬프트 앞에 파일 내용을 붙임.</li>
+</ol>
+<h3>좋은 요청의 공식: <b>위치 + 목표 + 검증 기준</b></h3>
+<pre><code># 나쁜 예
+"테스트 기능 더 좋게 해줘"
+
+# 좋은 예
+"TestCase.txt에 예외 기대 문법을 추가해줘.
+ 'div 1 0 => raises ZeroDivisionError' 가 통과해야 하고
+ 기존 리터럴 케이스(정수/실수/문자열/리스트)도 깨지면 안 돼.
+ 수정 후 uv run pytest -v 실행해서 결과 보여줘"</code></pre>
+<div class="note">
+  <b>ℹ 핵심 원리</b>
+  AI에게 <b>스스로 확인할 수 있는 합격 기준</b>(테스트, 빌드, 예시 입출력)을 주면
+  사람이 일일이 검수하는 대신 AI가 스스로 고치고-검사하고-반복합니다.
+  자세한 요령은 AI-WORKFLOW.md 부록과
+  <a href="https://code.claude.com/docs/en/best-practices">Anthropic 공식 모범사례</a> 참조.
+</div>
+
+<h2 id="trouble">8. 문제 해결</h2>
+<table>
+  <tr><th>증상</th><th>원인 / 해결</th></tr>
+  <tr><td><code>make: command not found</code> (Windows)</td><td>Windows 네이티브에서 실행함. <code>bootstrap.ps1</code>을 통해 WSL 안에서 실행하세요.</td></tr>
+  <tr><td><code>Makefile: missing separator</code></td><td>recipe 줄 들여쓰기가 스페이스로 바뀜. 반드시 TAB이어야 합니다.</td></tr>
+  <tr><td>스크립트 실행 시 <code>$'\r': command not found</code></td><td>파일이 CRLF로 저장됨. LF로 변환하세요 (<code>dos2unix</code> 또는 에디터 설정).</td></tr>
+  <tr><td>WSL 설치 에러 <code>0x80370102</code></td><td>BIOS/UEFI에서 가상화(Intel VT-x / AMD-V)를 켜세요.</td></tr>
+  <tr><td><code>'code' CLI를 찾을 수 없습니다</code></td><td>VS Code 명령팔레트(<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>) → "Shell Command: Install 'code' command in PATH" 실행 후 <code>make setup</code> 재시도. WSL에서는 VS Code로 WSL 폴더를 한 번 열면 자동 설치됩니다.</td></tr>
+  <tr><td><code>make project LANG=web</code>이 무시됨</td><td>변수 이름이 <code>PROJ_LANG</code>으로 변경되었습니다.</td></tr>
+  <tr><td>pre-commit 훅이 오래된 Ruff 버전을 씀</td><td>Ruff는 릴리스가 잦습니다. 프로젝트에서 <code>pre-commit autoupdate</code>를 주기적으로 실행하세요.</td></tr>
+  <tr><td>bootstrap.ps1에서 <code>Unexpected token</code> 파스 에러</td><td>파일이 UTF-8 <b>BOM 없이</b> 저장됨. Windows PowerShell 5.1은 BOM이 없으면 ANSI로 읽어 한국어 주석이 깨집니다. 반드시 <b>UTF-8(BOM 포함)</b>으로 저장하세요. (반대로 .sh 파일에는 BOM이 있으면 안 됩니다)</td></tr>
+</table>
+
+<h2 id="next">9. 다음 단계</h2>
+<table>
+  <tr><th>상황(임계값)</th><th>도입할 도구</th><th>효과</th></tr>
+  <tr><td>프로젝트 3개 이상, 프로젝트마다 도구 버전이 다름</td><td><b>mise</b> (<code>mise.toml</code>)</td><td>버전관리+환경변수+태스크를 하나로. make의 OS 감지 로직이 불필요해짐</td></tr>
+  <tr><td>협업자가 생기고 "내 컴퓨터에선 되는데"가 반복</td><td><b>devcontainer</b></td><td>컨테이너로 환경 완전 재현. OS별 설치 문제 소멸</td></tr>
+  <tr><td>템플릿을 자주 개선하게 됨</td><td><b>copier</b></td><td><code>copier update</code>로 기존 프로젝트에 템플릿 변경 반영</td></tr>
+</table>
+
+<footer>
+  <p>
+    설계 근거 문서: <code>DevEnvAuto/compass_artifact_wf-…_text_markdown.md</code> ·
+    AI 작업 지침: <a href="AI-WORKFLOW.md">docs/AI-WORKFLOW.md</a> ·
+    저장소 개요: <a href="../README.md">README.md</a>
+  </p>
+  <p>도구 스택 기준일: 2026-07 (uv/Ruff 버전은 릴리스가 잦으므로 <code>pre-commit autoupdate</code> 권장)</p>
+</footer>
+
+</div>
+</body>
+</html>

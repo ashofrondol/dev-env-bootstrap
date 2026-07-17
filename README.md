@@ -7,7 +7,14 @@
 - `make project` — 새 프로젝트 스캐폴딩 (파이썬 버전을 인터랙티브로 질문)
 - `make project PROJ_LANG=web` — HTML/CSS/JS 프로젝트 스캐폴딩
 - `make test` — `TestCase.txt` 파라미터화 테스트 + 스모크 테스트 실행
+- `make report` — 실행 프로파일 보고서 생성 (시간·메모리·구간별·입력별 → `reports/*.md`)
 - `make help` / `make os-info` — 도움말 / 감지된 OS 출력
+
+## 문서
+
+- **사용 가이드 (사람용)**: [docs/USAGE.html](docs/USAGE.html) — 브라우저로 열어 보세요.
+- **AI 작업 지침 (Claude Code용)**: [docs/AI-WORKFLOW.md](docs/AI-WORKFLOW.md) —
+  `cp docs/AI-WORKFLOW.md CLAUDE.md` 로 복사하거나 프롬프트에서 `@docs/AI-WORKFLOW.md` 로 참조.
 
 ## 요구 사항
 
@@ -56,10 +63,11 @@ dev-env-bootstrap/
 │   ├── install_global.sh         # 전역 도구 설치 (uv, code CLI, 익스텐션)
 │   ├── scaffold_project.sh       # 프로젝트 생성 로직
 │   ├── run_tests.sh              # TestCase.txt 파싱 + 스모크 테스트
+│   ├── run_report.sh             # 실행 프로파일 보고서 생성
 │   └── extensions.txt            # 설치할 VS Code 익스텐션 목록
 └── templates/
     ├── vscode/{settings.json, extensions.json}
-    ├── python/{pyproject.toml, .pre-commit-config.yaml,
+    ├── python/{pyproject.toml, .pre-commit-config.yaml, perf.py,
     │           smoke_test.py, tests/test_from_testcases.py}
     └── web/{package.json, index.html}
 ```
@@ -97,17 +105,50 @@ make setup DEFAULT_PYTHON_VERSION=3.12
 
 ## 테스트 방식 (`TestCase.txt`)
 
-각 줄을 `함수인자 => 기대값` 형식으로 적으면 pytest 파라미터화 테스트로 변환된다.
+각 줄을 `함수명 인자... => 기대값` 형식으로 적으면 pytest 파라미터화 테스트로 변환된다.
+인자와 기대값은 **파이썬 리터럴**로 해석된다 (정수·실수·불리언·None·문자열·리스트·튜플·딕셔너리).
 
 ```
-# 형식: 함수인자 => 기대값
+# 형식: 함수명 인자... => 기대값
 add 2 3 => 5
-add -1 1 => 0
+add 0.1 0.2 => 0.3                       # 실수는 근사 비교(pytest.approx)
+concat "hello world" "!" => "hello world!"
+head [10, 20, 30] => 10
+merge {"a": 1} {"b": 2} => {"a": 1, "b": 2}
 ```
 
 - `tests/test_from_testcases.py`가 위 파일을 읽어 자동으로 케이스를 생성한다.
+  따옴표/괄호 안의 공백과 `=>`는 구분자로 취급하지 않으며, 리터럴이 아닌 토큰은
+  문자열로 취급한다 (`upper hello => HELLO` 가능).
 - 루트에 `smoke_test.py`가 있으면 `make test`가 이어서 실행한다.
-- 파서는 정수 인자 예시 기준으로 단순화돼 있으니, 문자열/실수/리스트가 필요하면 파싱 로직을 확장하라.
+- `make test`는 저장소 루트에서 실행하면 `PROJECT_NAME` 디렉터리로 이동해 실행하고,
+  테스트 실패를 종료코드로 그대로 전파한다 (CI 게이트 가능).
+
+## 실행 프로파일 보고서 (`make report`)
+
+`make report`(또는 프로젝트 안에서 `uv run python perf.py`)를 실행하면
+`reports/<날짜>.md` 보고서가 생성되고 `reports/history.csv`에 요약이 누적된다.
+
+| 섹션 | 내용 |
+| --- | --- |
+| 1. 테스트 | pytest 요약 + 가장 느린 테스트 Top 10 |
+| 2. 실행 계측 | 대상 스크립트(기본 `smoke_test.py`)의 벽시계/CPU 시간, 최대 메모리 |
+| 3. 구간별 측정 | `with span("이름"):` 으로 감싼 구간의 시간·메모리 증가 |
+| 4. 프로파일 | cProfile 누적시간 상위 함수 (별도 실행이라 §2보다 느림 — 상대 비교용) |
+| 5. 입력 변동 벤치 | `TestCase.txt` 케이스별 시간/메모리 — 입력 크기에 따른 변동 확인 |
+
+```python
+# 코드에서 특정 구간을 측정하려면:
+from perf import span
+
+with span("파싱"):
+    parse(...)
+```
+
+옵션: `uv run python perf.py --target main.py --repeat 7 --no-profile` 등.
+측정 수치는 환경 부하에 따라 변동하므로 절대값보다 `history.csv` 추세 비교에 쓰는 것을 권장.
+더 깊은 분석이 필요하면 scalene(라인 수준), memray(메모리 심층),
+pytest-benchmark(마이크로벤치), hyperfine(CLI 비교)을 검토하라.
 
 ## 다음 단계 (선택)
 

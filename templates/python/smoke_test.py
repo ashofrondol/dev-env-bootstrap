@@ -7,6 +7,12 @@
 
 import sys
 
+try:
+    # make report 실행 시 구간별 시간/메모리가 보고서에 표시된다
+    from perf import span
+except ImportError:  # perf.py가 없어도 스모크 테스트는 동작
+    from contextlib import nullcontext as span
+
 
 def add(a, b):
     return a + b
@@ -14,8 +20,9 @@ def add(a, b):
 
 def main() -> int:
     # 기본 동작 확인 (실제 프로젝트 로직으로 교체하세요)
-    assert add(2, 3) == 5, "add(2, 3) 가 5가 아닙니다"
-    assert add(-1, 1) == 0, "add(-1, 1) 가 0이 아닙니다"
+    with span("스모크: add 검증"):
+        assert add(2, 3) == 5, "add(2, 3) 가 5가 아닙니다"
+        assert add(-1, 1) == 0, "add(-1, 1) 가 0이 아닙니다"
     print("[OK] 스모크 테스트 통과")
     return 0
 

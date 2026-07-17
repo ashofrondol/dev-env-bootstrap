@@ -24,7 +24,8 @@ echo "==> 4) VS Code 익스텐션 설치"
 if command -v code &>/dev/null; then
   while read -r ext; do
     [[ -z "$ext" || "$ext" == \#* ]] && continue
-    code --install-extension "$ext" --force
+    # code가 stdin을 소비하면 목록의 다음 줄을 삼키므로 /dev/null로 차단
+    code --install-extension "$ext" --force < /dev/null
   done < "$SCRIPT_DIR/extensions.txt"
 else
   echo "[!] 'code' CLI를 찾을 수 없습니다. VS Code에서 명령팔레트 >"

@@ -1,0 +1,10 @@
+# 크로스플랫폼 부트스트랩 — 줄바꿈을 명시적으로 고정한다.
+# 셸/메이크파일은 macOS·WSL 에서 실행되므로 반드시 LF.
+# (CRLF 로 나가면 bash 가 'bad interpreter', make 가 파싱 오류로 죽을 수 있다.)
+* text=auto eol=lf
+*.sh   text eol=lf
+Makefile text eol=lf
+*.py   text eol=lf
+
+# PowerShell 부트스트랩은 Windows 에서 실행 → CRLF 유지.
+*.ps1  text eol=crlf

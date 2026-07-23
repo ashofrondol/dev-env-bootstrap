@@ -20,6 +20,9 @@ DEFAULT_PYTHON_VERSION ?= 3.13
 PROJ_LANG ?= python
 PROJECT_NAME ?= my-project
 
+# 블랙박스 그레이더 폴더 이름 — '루트 바로 위 상위 디렉터리'(이 저장소의 부모)에서 찾는다.
+GRADER_DIRNAME ?= blackbox-tests
+
 # ---------- OS 감지 ----------
 # Windows cmd에서 실행 시 OS 환경변수 = Windows_NT
 ifeq ($(OS),Windows_NT)
@@ -41,7 +44,7 @@ endif
 
 SHELL := /bin/bash
 
-.PHONY: help setup project test report os-info bootstrap-check
+.PHONY: help setup project test report grade grade-detect os-info bootstrap-check
 
 help:
 	@echo "감지된 OS: $(DETECTED_OS)"
@@ -52,6 +55,9 @@ help:
 	@echo "  make project PROJ_LANG=web - 웹(HTML/CSS/JS) 프로젝트 생성"
 	@echo "  make test             - TestCase.txt 및 스모크 테스트 실행"
 	@echo "  make report           - 실행 프로파일 보고서 생성 (reports/*.md)"
+	@echo "  make grade-detect     - 상위 폴더의 블랙박스 그레이더 발견 여부 확인"
+	@echo "  make grade TARGET=<경로> [ASSIGNMENT=<과제ID>] [MODULE=<모듈명>]"
+	@echo "                        - 발견한 그레이더로 대상 구현을 블랙박스 채점"
 
 os-info:
 	@echo "OS = $(DETECTED_OS), 기본 파이썬 = $(DEFAULT_PYTHON_VERSION)"
@@ -84,3 +90,18 @@ test: bootstrap-check
 # 시간/메모리/구간별 측정 결과를 reports/<날짜>.md 로 남긴다
 report: bootstrap-check
 	@bash scripts/run_report.sh "$(PROJ_LANG)" "$(PROJECT_NAME)"
+
+# ---------- 블랙박스 그레이더 자동 발견 & 실행 ----------
+# 이 저장소의 '루트 바로 위 상위 디렉터리'(= 부모 폴더)에서 GRADER_DIRNAME 을 찾아,
+# 그 안의 grade.sh 로 대상 구현(내 것/남의 것)을 블랙박스 채점한다.
+#   make grade-detect
+#   make grade TARGET=~/Desktop/codyssey_B2-1
+#   make grade TARGET=~/classmates/kim ASSIGNMENT=b2_1_budget_app MODULE=my_app
+PARENT_DIR := $(abspath $(CURDIR)/..)
+GRADER_PATH := $(PARENT_DIR)/$(GRADER_DIRNAME)
+
+grade-detect:
+	@bash scripts/run_graders.sh --detect "$(GRADER_PATH)"
+
+grade: bootstrap-check
+	@bash scripts/run_graders.sh "$(GRADER_PATH)" "$(TARGET)" "$(ASSIGNMENT)" "$(MODULE)"

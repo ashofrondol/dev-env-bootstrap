@@ -18,7 +18,7 @@ uv python install "$DEFAULT_PY"
 echo "==> 3) 전역 CLI 도구 설치 (Ruff, pre-commit)"
 # Astral 공식 권장 설치법 (@latest로 최신 고정)
 uv tool install ruff@latest
-uv tool install pre-commit
+uv tool install pre-commit@latest
 
 echo "==> 4) VS Code 익스텐션 설치"
 if command -v code &>/dev/null; then

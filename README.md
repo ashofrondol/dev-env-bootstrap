@@ -8,6 +8,9 @@
 - `make project PROJ_LANG=web` — HTML/CSS/JS 프로젝트 스캐폴딩
 - `make test` — `TestCase.txt` 파라미터화 테스트 + 스모크 테스트 실행
 - `make report` — 실행 프로파일 보고서 생성 (시간·메모리·구간별·입력별 → `reports/*.md`)
+- `make diagram` — UML 클래스/패키지 다이어그램 (pyreverse → `docs/*.mmd`, Graphviz 불필요)
+- `make metrics` — OOP 지표: 인지 복잡도(complexipy) + 순환복잡도·유지보수지수(radon)
+- `make arch` — 아키텍처 계층/의존 규칙 검사 (tach)
 - `make help` / `make os-info` — 도움말 / 감지된 OS 출력
 
 ## 문서
@@ -98,10 +101,17 @@ make setup DEFAULT_PYTHON_VERSION=3.12
 | 린터 + 포매터 | **Ruff** | Flake8·Black·isort 대체, 저장 시 자동 수정 |
 | 타입 체크 | **Pylance** | Ruff와 역할 분담 (중복 린팅은 끔) |
 | 테스트 | **pytest** / **Vitest** | 파이썬 / JS |
-| 커밋 훅 | **pre-commit** | 커밋 시 Ruff 자동 검사·수정 |
+| 커밋 훅 | **pre-commit** | 커밋 시 Ruff + complexipy 자동 검사 |
 | AI 코딩 | **Claude Code** | `anthropic.claude-code` 익스텐션 |
+| 구조 시각화 | **pyreverse** (pylint 내장) | `make diagram` — UML을 Mermaid로 출력. `pyreverse`만 호출하며 **pylint을 린터로 쓰지 않는다** |
+| OOP 지표 | **complexipy** + **radon** | `make metrics` — 인지 복잡도(Rust, 커밋 게이트) + 순환복잡도·MI(보고) |
+| 아키텍처 규칙 | **tach** | `make arch` — 계층/의존 계약 강제 (Rust 단일 바이너리) |
 
 저장 시 자동 포맷·임포트 정렬·lint 자동수정은 `templates/vscode/settings.json`에서 켜진다.
+
+> **분석 3종(pyreverse·complexipy·radon·tach)은 린터가 아니라 시각화기/지표/강제기다.**
+> Ruff의 "유일 린터" 원칙과 충돌하지 않으며, `make` 타깃에서 **uvx로 즉석 실행**되므로 전역 설치가 없다
+> (complexipy만 pre-commit 훅으로도 고정 설치되어 커밋을 게이트한다).
 
 ## 테스트 방식 (`TestCase.txt`)
 
@@ -149,6 +159,37 @@ with span("파싱"):
 측정 수치는 환경 부하에 따라 변동하므로 절대값보다 `history.csv` 추세 비교에 쓰는 것을 권장.
 더 깊은 분석이 필요하면 scalene(라인 수준), memray(메모리 심층),
 pytest-benchmark(마이크로벤치), hyperfine(CLI 비교)을 검토하라.
+
+## OOP 구조 분석 (`make diagram` / `metrics` / `arch`)
+
+린트·포맷(Ruff)·타입(Pylance)·테스트(pytest)·런타임 성능(perf.py)에 더해, **정적 구조 품질**을
+세 가지 축으로 확인한다. 모든 도구는 `uvx`로 즉석 실행되므로 별도 전역 설치가 필요 없다.
+
+| 명령 | 도구 | 무엇을 하나 |
+| --- | --- | --- |
+| `make diagram` | pyreverse | UML **클래스/패키지 다이어그램**을 Mermaid(`docs/*.mmd`)로 생성. VS Code 내장 Mermaid 미리보기나 Claude Code에서 바로 렌더. **Graphviz 불필요.** |
+| `make metrics` | complexipy + radon | **인지 복잡도**(complexipy, Rust)와 **순환복잡도(A~F)·유지보수지수(MI)**(radon)를 함께 출력. 보고 전용(실패시키지 않음). |
+| `make arch` | tach | **계층/의존 계약** 검사 (예: `models`가 `services`를 import 금지). 위반 시 `exit≠0` → CI 게이트 가능. |
+
+```bash
+make diagram                 # docs/classes_*.mmd, docs/packages_*.mmd 생성
+make metrics                 # 복잡도/유지보수지수 표 출력
+make metrics SRC=src         # 패키지가 하위 폴더에 있으면 대상 좁히기
+```
+
+**`make arch`는 최초 1회 계약 정의가 필요하다** (빈 프로젝트는 검사할 구조가 없으므로 자동화하지 않았다):
+
+```bash
+cd <프로젝트>
+uvx tach init                # 현재 모듈 구조를 스캔해 tach.toml 생성
+# tach.toml 에서 계층/의존 규칙을 정의 (cli → services → repository → models 방향 등)
+make arch                    # 이후로는 규칙 위반만 검사
+```
+
+- **복잡도 지표가 두 개인 이유**: Ruff의 `C901`은 *순환* 복잡도(분기 수), complexipy는 *인지* 복잡도
+  (중첩·읽기 어려움)로 서로 다른 것을 측정한다. 커밋 게이트는 pre-commit 훅(Ruff + complexipy)이 담당하고,
+  `make metrics`는 숫자를 훑어보는 보고용이다.
+- **아키텍처 강제기는 tach 하나만** 쓴다. import-linter/pytestarch와 역할이 겹치므로 둘을 함께 두지 않는다.
 
 ## 다음 단계 (선택)
 

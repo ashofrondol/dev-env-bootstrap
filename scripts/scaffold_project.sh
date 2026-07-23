@@ -30,6 +30,15 @@ if [[ "$LANG_TYPE" == "python" ]]; then
   uv init --python "$PY_VER"
   uv python pin "$PY_VER"          # .python-version 고정
   uv add --dev pytest psutil       # 테스트 프레임워크 + 자원 측정
+
+  # uv init이 만든 pyproject.toml에는 표준 Ruff/pytest 설정이 없다.
+  # 템플릿의 [tool.*] 섹션만 추출해 병합한다 ([project]/[dependency-groups]는 uv가 관리).
+  # 이 병합이 없으면 새 프로젝트가 Ruff 기본값(line-length/규칙 상이)으로 돌아 표준과 어긋난다.
+  {
+    printf '\n# ===== dev-env-bootstrap 표준 설정 (Ruff + pytest) =====\n'
+    awk '/^\[tool\.ruff\]/{f=1} f' "$TPL/python/pyproject.toml"
+  } >> pyproject.toml
+
   mkdir -p tests
   cp "$TPL/python/smoke_test.py" . 2>/dev/null || true
   cp "$TPL/python/perf.py" . 2>/dev/null || true

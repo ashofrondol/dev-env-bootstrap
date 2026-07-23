@@ -11,3 +11,9 @@ repos:
       - id: ruff-check # 린터 (먼저)
         args: [--fix]
       - id: ruff-format # 포매터 (나중)
+  # 인지 복잡도 게이트 (Rust 단일 바이너리). Ruff의 C901(순환 복잡도)과 다른 지표다.
+  # 반드시 ruff 블록 뒤에 둔다 (ruff-check -> ruff-format 순서를 건드리지 않기 위해).
+  - repo: https://github.com/rohaquinlop/complexipy-pre-commit
+    rev: v6.2.0
+    hooks:
+      - id: complexipy

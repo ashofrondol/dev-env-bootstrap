@@ -15,7 +15,7 @@ requires-python = ">=3.13"
 dependencies = []
 
 [dependency-groups]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "psutil>=5"]   # psutil: perf.py 메모리/CPU 계측에 필요
 
 # ---------- Ruff (린터 + 포매터) ----------
 [tool.ruff]
@@ -24,7 +24,13 @@ target-version = "py313"
 
 [tool.ruff.lint]
 # E/F: pyflakes+pycodestyle, I: isort, UP: pyupgrade, B: bugbear
-select = ["E", "F", "I", "UP", "B"]
+# C901: 순환 복잡도(mccabe) — complexipy의 인지 복잡도와 상호보완(다른 지표다)
+# PLR09xx: OOP 설계 냄새 — too-many-arguments/branches/returns/statements
+#   (전체 PLR 대신 설계 규칙만 선택: PLR2004 매직넘버 같은 소음성 규칙 제외)
+select = ["E", "F", "I", "UP", "B", "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
 
 [tool.ruff.format]
 quote-style = "double"

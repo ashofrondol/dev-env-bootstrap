@@ -9,7 +9,7 @@
 - `make test` — `TestCase.txt` 파라미터화 테스트 + 스모크 테스트 실행
 - `make report` — 실행 프로파일 보고서 생성 (시간·메모리·구간별·입력별 → `reports/*.md`)
 - `make diagram` — UML 클래스/패키지 다이어그램 (pyreverse → `docs/*.mmd`, Graphviz 불필요)
-- `make metrics` — OOP 지표: 인지 복잡도(complexipy) + 순환복잡도·유지보수지수(radon)
+- `make metrics` — OOP 지표: 인지 복잡도(complexipy) + 순환복잡도·유지보수지수(radon) → `docs/metrics_*.md`
 - `make arch` — 아키텍처 계층/의존 규칙 검사 (tach)
 - `make help` / `make os-info` — 도움말 / 감지된 OS 출력
 
@@ -168,12 +168,12 @@ pytest-benchmark(마이크로벤치), hyperfine(CLI 비교)을 검토하라.
 | 명령 | 도구 | 무엇을 하나 |
 | --- | --- | --- |
 | `make diagram` | pyreverse | UML **클래스/패키지 다이어그램**을 Mermaid(`docs/*.mmd`)로 생성. VS Code 내장 Mermaid 미리보기나 Claude Code에서 바로 렌더. **Graphviz 불필요.** |
-| `make metrics` | complexipy + radon | **인지 복잡도**(complexipy, Rust)와 **순환복잡도(A~F)·유지보수지수(MI)**(radon)를 함께 출력. 보고 전용(실패시키지 않음). |
+| `make metrics` | complexipy + radon | **인지 복잡도**(complexipy, Rust)와 **순환복잡도(A~F)·유지보수지수(MI)**(radon)를 콘솔에 출력하고 `docs/metrics_<패키지>.md`로도 저장. 보고 전용(실패시키지 않음). |
 | `make arch` | tach | **계층/의존 계약** 검사 (예: `models`가 `services`를 import 금지). 위반 시 `exit≠0` → CI 게이트 가능. |
 
 ```bash
 make diagram                 # docs/classes_*.mmd, docs/packages_*.mmd 생성
-make metrics                 # 복잡도/유지보수지수 표 출력
+make metrics                 # 복잡도/유지보수지수 표 출력 + docs/metrics_*.md 저장
 make metrics SRC=src         # 패키지가 하위 폴더에 있으면 대상 좁히기
 ```
 

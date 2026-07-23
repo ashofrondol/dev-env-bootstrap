@@ -64,13 +64,34 @@ run_diagram() {
 }
 
 run_metrics() {
-  echo "==> [1/2] 인지 복잡도 (complexipy, Rust) — 보고 전용(게이트는 pre-commit 훅이 담당)"
-  # --ignore-complexity: 임계 초과여도 실패시키지 않고 표만 출력. .venv는 .gitignore로 자동 제외.
-  uvx complexipy "$SRC" --ignore-complexity
-  echo ""
-  echo "==> [2/2] 순환 복잡도(A~F 등급) + 유지보수지수(MI) (radon)"
-  uvx radon cc -s -a -i ".venv" "$SRC"
-  uvx radon mi -i ".venv" "$SRC"
+  mkdir -p docs
+  local out="docs/metrics_${PKG}.md"
+  echo "==> OOP 지표 측정 (complexipy + radon) — 콘솔 출력 + ${out} 저장"
+  echo "    (보고 전용: 커밋 게이트는 pre-commit 훅이 담당. .venv는 제외)"
+
+  # 각 도구를 1회씩 실행해 결과를 캡처(콘솔엔 그대로, docs엔 Markdown으로 저장).
+  # --ignore-complexity: 임계 초과여도 실패시키지 않고 표만 출력. --sort desc: 복잡한 것부터.
+  local cx rcc rmi
+  cx="$(uvx complexipy "$SRC" --ignore-complexity --sort desc 2>&1 || true)"
+  rcc="$(uvx radon cc -s -a -i ".venv" "$SRC" 2>&1 || true)"
+  rmi="$(uvx radon mi -i ".venv" "$SRC" 2>&1 || true)"
+
+  # 콘솔 출력
+  echo; echo "--- 인지 복잡도 (complexipy, 임계 15) ---"; echo "$cx"
+  echo; echo "--- 순환 복잡도 (radon cc, A~F) ---";       echo "$rcc"
+  echo; echo "--- 유지보수 지수 (radon mi) ---";           echo "$rmi"
+
+  # docs/ 저장 (diagram과 동일하게 대상 프로젝트 안에 남긴다)
+  {
+    printf '# 코드 품질 지표 — %s\n\n' "$PKG"
+    printf '_생성: %s · 대상: `%s`_\n\n' "$(date '+%Y-%m-%d %H:%M')" "$SRC"
+    printf '> 인지 복잡도(complexipy)와 순환 복잡도(radon cc)는 서로 다른 지표다.\n'
+    printf '> complexipy의 `FAILED`, radon의 `C`~`F` 등급을 우선 점검할 것.\n\n'
+    printf '## 인지 복잡도 · complexipy (임계 15)\n\n```text\n%s\n```\n\n' "$cx"
+    printf '## 순환 복잡도 · radon cc (A~F 등급)\n\n```text\n%s\n```\n\n' "$rcc"
+    printf '## 유지보수 지수 · radon mi\n\n```text\n%s\n```\n' "$rmi"
+  } > "$out"
+  echo; echo "    -> ${out} 저장됨"
 }
 
 run_arch() {

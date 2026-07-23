@@ -5,32 +5,49 @@ set -euo pipefail
 # 사용: bash scripts/run_analysis.sh <diagram|metrics|arch> <lang> <project_name>
 # 도구는 모두 uvx로 즉석 실행 → 전역 설치 불필요, 버전 드리프트 없음.
 # ============================================================
+# 분석 도구(complexipy 등)는 결과에 유니코드(✅/트리문자)를 출력한다. 비-UTF8 콘솔
+# (예: Windows cp949)에서 UnicodeEncodeError로 죽지 않도록 파이썬 출력 인코딩을 고정.
+export PYTHONUTF8=1
+export PYTHONIOENCODING=utf-8
+
 MODE="${1:-metrics}"
 LANG_TYPE="${2:-python}"
 PROJECT_NAME="${3:-}"
+TARGET="${4:-}"          # 임의 경로(외부/절대경로 포함). bootstrap 밖 프로젝트 분석용.
+SRC="${5:-}"             # 분석 대상 하위 경로 (예: src). 미지정 시 프로젝트 전체(.).
+[[ -z "$SRC" ]] && SRC="."
 
 if [[ "$LANG_TYPE" != "python" ]]; then
   echo "[!] OOP 분석(다이어그램/지표/아키텍처)은 현재 python 프로젝트만 지원합니다."
   exit 1
 fi
 
-# ---------- 실행 위치 결정 (run_report.sh와 동일 규칙) ----------
-# 저장소 루트에서 부르면 PROJECT_NAME 디렉터리로 이동, 프로젝트 안에서 부르면 그대로.
-if [[ ! -f pyproject.toml ]]; then
-  if [[ -n "$PROJECT_NAME" && -d "$PROJECT_NAME" ]]; then
-    echo "==> 프로젝트 디렉터리로 이동: $PROJECT_NAME"
-    cd "$PROJECT_NAME"
+# ---------- 분석 위치 결정 ----------
+# 우선순위: TARGET(임의 경로) > 현재 디렉터리가 프로젝트 > PROJECT_NAME(하위 디렉터리)
+# 분석 도구(pyreverse/radon/complexipy/tach)는 uvx로 독립 실행되므로 대상이
+# bootstrap/uv 프로젝트가 아니어도(pyproject.toml 이 없어도) 그대로 동작한다.
+if [[ -n "$TARGET" ]]; then
+  if [[ -d "$TARGET" ]]; then
+    echo "==> 분석 대상(TARGET)으로 이동: $TARGET"
+    cd "$TARGET"
   else
-    echo "[!] 여기는 python 프로젝트 디렉터리가 아닙니다."
-    echo "    make $MODE PROJECT_NAME=<프로젝트명> 으로 실행하거나,"
-    echo "    생성된 프로젝트 디렉터리 안에서 실행하세요."
+    echo "[!] TARGET 경로가 존재하지 않습니다: $TARGET"
     exit 1
   fi
+elif [[ -f pyproject.toml ]]; then
+  :  # 현재 디렉터리가 프로젝트 루트 → 그대로 분석
+elif [[ -n "$PROJECT_NAME" && -d "$PROJECT_NAME" ]]; then
+  echo "==> 프로젝트 디렉터리로 이동: $PROJECT_NAME"
+  cd "$PROJECT_NAME"
+else
+  echo "[!] 분석할 프로젝트를 찾지 못했습니다. 다음 중 하나로 지정하세요:"
+  echo "    - bootstrap으로 만든 하위 프로젝트:  make $MODE PROJECT_NAME=<이름>"
+  echo "    - 임의 경로(외부/절대경로 포함):      make $MODE TARGET=<경로>"
+  echo "        예) make $MODE TARGET=../../codyssey_B2-1"
+  echo "    - 또는 프로젝트 디렉터리 안에서 직접 실행"
+  exit 1
 fi
 
-# 분석 대상 소스. 기본은 현재 디렉터리 전체(.).
-# 패키지/모듈이 하위 폴더에 있으면 SRC=경로 로 좁힐 수 있다: make metrics SRC=src
-SRC="${SRC:-.}"
 PKG="$(basename "$(pwd)")"
 
 run_diagram() {

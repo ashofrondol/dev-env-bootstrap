@@ -45,6 +45,7 @@ uvx ruff check --fix . && uvx ruff format .   # 커밋 전 린트+포맷
 make diagram                       # UML 클래스/패키지 다이어그램 (pyreverse -> docs/*.mmd)
 make metrics                       # 인지복잡도(complexipy) + 순환복잡도/MI(radon)
 make arch                          # 아키텍처 규칙 검사 (tach; 최초 1회 `uvx tach init` 필요)
+make metrics TARGET=<경로> SRC=src # 외부(비-bootstrap) 프로젝트 분석 (diagram/arch도 TARGET 동일)
 ```
 
 ## 하드 규칙 (어기면 빌드/실행이 깨진다)

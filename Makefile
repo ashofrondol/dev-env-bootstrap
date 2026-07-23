@@ -58,6 +58,8 @@ help:
 	@echo "  make diagram          - UML 클래스/패키지 다이어그램 생성 (pyreverse, Mermaid → docs/*.mmd)"
 	@echo "  make metrics          - OOP 지표: 인지 복잡도(complexipy) + 순환복잡도/MI(radon)"
 	@echo "  make arch             - 아키텍처 규칙 검사 (tach check; 최초 1회 'uvx tach init' 필요)"
+	@echo "     └ 외부(비-bootstrap) 프로젝트 분석: diagram/metrics/arch 에 TARGET=<경로> 추가"
+	@echo "        예) make metrics TARGET=../../codyssey_B2-1 SRC=src"
 	@echo "  make grade-detect     - 상위 폴더의 블랙박스 그레이더 발견 여부 확인"
 	@echo "  make grade TARGET=<경로> [ASSIGNMENT=<과제ID>] [MODULE=<모듈명>]"
 	@echo "                        - 발견한 그레이더로 대상 구현을 블랙박스 채점"
@@ -92,19 +94,21 @@ test: bootstrap-check
 # ---------- 실행 프로파일 보고서 ----------
 # 시간/메모리/구간별 측정 결과를 reports/<날짜>.md 로 남긴다
 report: bootstrap-check
-	@bash scripts/run_report.sh "$(PROJ_LANG)" "$(PROJECT_NAME)"
+	@bash scripts/run_report.sh "$(PROJ_LANG)" "$(PROJECT_NAME)" "$(TARGET)"
 
 # ---------- OOP 구조 분석 (시각화 / 지표 / 아키텍처) ----------
 # 도구는 모두 uvx로 즉석 실행(pyreverse/complexipy/radon/tach) → 전역 설치 불필요.
-# 대상 소스를 좁히려면 SRC 전달: make metrics SRC=src
+# 대상 지정:  TARGET=<경로>  (bootstrap 밖 프로젝트, 절대/상대경로 모두 가능)
+#            SRC=<하위경로> (패키지가 src/ 등 하위에 있을 때 좁히기)
+#   예) make metrics TARGET=../../codyssey_B2-1 SRC=src
 diagram: bootstrap-check
-	@bash scripts/run_analysis.sh diagram "$(PROJ_LANG)" "$(PROJECT_NAME)"
+	@bash scripts/run_analysis.sh diagram "$(PROJ_LANG)" "$(PROJECT_NAME)" "$(TARGET)" "$(SRC)"
 
 metrics: bootstrap-check
-	@bash scripts/run_analysis.sh metrics "$(PROJ_LANG)" "$(PROJECT_NAME)"
+	@bash scripts/run_analysis.sh metrics "$(PROJ_LANG)" "$(PROJECT_NAME)" "$(TARGET)" "$(SRC)"
 
 arch: bootstrap-check
-	@bash scripts/run_analysis.sh arch "$(PROJ_LANG)" "$(PROJECT_NAME)"
+	@bash scripts/run_analysis.sh arch "$(PROJ_LANG)" "$(PROJECT_NAME)" "$(TARGET)" "$(SRC)"
 
 # ---------- 블랙박스 그레이더 자동 발견 & 실행 ----------
 # 이 저장소의 '루트 바로 위 상위 디렉터리'(= 부모 폴더)에서 GRADER_DIRNAME 을 찾아,
